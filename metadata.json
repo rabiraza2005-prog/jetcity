@@ -1,0 +1,8 @@
+{
+  "name": "Jet City",
+  "description": "3D Flight and Urban City Simulation Game featuring fighter jets, airliners, helicopters, cars, city exploration, and aerial missions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

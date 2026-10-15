@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Jet City</title>
+<style>
+:root{
+  --ink:#e9f3f1;
+  --card:rgba(16,25,34,.78);
+  --line:rgba(255,255,255,.16);
+  --accent:#e8684a;
+  box-sizing:border-box;
+}
+html,body{
+  height:100%;margin:0;overflow:hidden;
+  background:#10141c;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+#c{position:fixed;inset:0}
+
+/* Sleek compact cards */
+.card{
+  position:fixed;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  color:var(--ink);
+  box-shadow:0 3px 10px rgba(0,0,0,.3);
+  z-index:10;
+}
+
+/* Compact HUD Info at top-left */
+#title{
+  top:calc(env(safe-area-inset-top,0px) + 8px);
+  left:calc(env(safe-area-inset-left,0px) + 8px);
+  padding:4px 8px;
+  font-size:11px;
+  line-height:1.25;
+  max-width:210px;
+}
+#title b{font-size:13px;color:#ff9e80}
+#h1{display:block;font-size:10px;opacity:.9}
+#h2{display:block;font-size:9px;opacity:.75}
+
+/* Minimap - compact circular radar at top-right */
+#mm{
+  top:calc(env(safe-area-inset-top,0px) + 8px);
+  right:calc(env(safe-area-inset-right,0px) + 8px);
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.25);
+  box-shadow:0 3px 12px rgba(0,0,0,.5);
+}
+
+/* Compact Speedometer at bottom-center */
+#speedo{
+  left:50%;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+  transform:translateX(-50%);
+  padding:3px 12px;
+  font-size:15px;
+  font-weight:800;
+  border-radius:8px;
+  color:#ffdf5d;
+  background:rgba(12,20,28,.85);
+  border:1px solid rgba(255,223,93,.35);
+  display:block;
+  pointer-events:none;
+  letter-spacing:.5px;
+}
+
+/* Alert Messages & Prompts - compact & non-intrusive */
+#msg{
+  top:28%;left:50%;
+  transform:translate(-50%,-50%);
+  padding:8px 16px;
+  font-size:14px;
+  font-weight:700;
+  text-align:center;
+  max-width:85vw;
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+}
+#prompt{
+  left:50%;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 42px);
+  transform:translateX(-50%);
+  padding:4px 12px;
+  font-size:12px;
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+#hint{display:none!important}
+#pad{display:none!important}
+#mode,#build,#tools,#shop,#xh,#ring{display:none!important}
+#night{display:none!important}
+
+#mis{
+  left:50%;
+  top:calc(env(safe-area-inset-top,0px) + 8px);
+  transform:translateX(-50%);
+  padding:4px 10px;
+  font-size:11px;
+  font-weight:700;
+  display:none;
+  pointer-events:none;
+}
+
+/* Compact Mobile Menu Modal */
+#menu{
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  padding:14px 16px;
+  display:none;
+  min-width:270px;
+  max-width:90vw;
+  max-height:82vh;
+  overflow:auto;
+  font-size:12px;
+}
+#menu b{font-size:15px}
+#menu div{margin:6px 0}
+#menu button{
+  margin:2px 4px 2px 0;
+  padding:4px 8px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font:inherit;
+  font-size:11px;
+  cursor:pointer;
+}
+#menu button.on{background:var(--accent);color:#fff}
+
+/* ==== DEDICATED CAR DRIVING TOUCH CONTROLS ==== */
+.drive-ctrls{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:20;
+}
+.drive-ctrls button{
+  pointer-events:auto;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:pointer;
+  outline:none;
+}
+
+/* Left Steer Buttons */
+.steer-zone{
+  position:absolute;
+  left:calc(env(safe-area-inset-left,0px) + 12px);
+  bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.steer-btn{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.28);
+  background:rgba(20,32,45,.82);
+  color:#ffffff;
+  font-size:26px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+  transition:transform .06s,background .06s;
+}
+.steer-btn:active{
+  background:rgba(232,104,74,.92);
+  transform:scale(.92);
+}
+
+/* Right Pedals & Driving Actions */
+.pedals-zone{
+  position:absolute;
+  right:calc(env(safe-area-inset-right,0px) + 12px);
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:8px;
+}
+.mini-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.mini-btn{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(26,40,54,.8);
+  color:#ffffff;
+  font-size:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+  transition:transform .06s,background .06s;
+}
+.mini-btn:active{
+  background:rgba(232,104,74,.85);
+  transform:scale(.92);
+}
+
+.pedals-row{
+  display:flex;
+  gap:12px;
+  align-items:flex-end;
+}
+.pedal{
+  border-radius:14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.5);
+  transition:transform .06s;
+}
+.pedal:active{
+  transform:scale(.92);
+}
+.gas{
+  width:68px;
+  height:78px;
+  background:linear-gradient(180deg,#3ab867 0%,#208542 100%);
+  border:2px solid #58e388;
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+}
+.brake{
+  width:58px;
+  height:66px;
+  background:linear-gradient(180deg,#e04638 0%,#a82920 100%);
+  border:2px solid #f66d63;
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+}
+.lbl{
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.6px;
+  margin-top:2px;
+  opacity:.95;
+}
+
+body.nui .card,body.nui .drive-ctrls{display:none!important}
+</style>
+</head>
+<body>
+<div id="c"></div>
+
+<!-- Compact Top HUD -->
+<div id="title" class="card">
+  <b>🚗 City Drive</b>
+  <span id="h1"></span>
+  <span id="h2"></span>
+</div>
+
+<div id="mis" class="card"></div>
+<canvas id="mm" class="card" width="180" height="180"></canvas>
+<div id="speedo" class="card">0 km/h</div>
+<div id="prompt" class="card"></div>
+<div id="msg" class="card"></div>
+<div id="menu" class="card"></div>
+
+<!-- Hidden dummy anchors to keep Three.js scripts happy if referenced -->
+<div id="pad" style="display:none"></div>
+<div id="hint" style="display:none"></div>
+<div id="tools" style="display:none"></div>
+<div id="shop" style="display:none"></div>
+<button id="mode" style="display:none"></button>
+<button id="night" style="display:none"></button>
+<button id="build" style="display:none"></button>
+<div id="xh" style="display:none"></div>
+<div id="ring" style="display:none"></div>
+
+<!-- DEDICATED CAR DRIVING CONTROLS -->
+<div class="drive-ctrls">
+  <!-- Steering Buttons (Left Thumb) -->
+  <div class="steer-zone">
+    <button id="btnLeft" class="steer-btn" aria-label="Steer Left">◀</button>
+    <button id="btnRight" class="steer-btn" aria-label="Steer Right">▶</button>
+  </div>
+
+  <!-- Pedals & Driving Utilities (Right Thumb) -->
+  <div class="pedals-zone">
+    <div class="mini-row">
+      <button id="btnBoost" class="mini-btn" aria-label="Nitro Boost" title="Turbo Boost">⚡</button>
+      <button id="btnHorn" class="mini-btn" aria-label="Horn" title="Horn">📢</button>
+      <button id="btnCam" class="mini-btn" aria-label="Camera" title="Camera View">👁️</button>
+      <button id="btnCar" class="mini-btn" aria-label="Enter or Exit Car" title="Enter / Exit Car">🚗</button>
+      <button id="btnReset" class="mini-btn" aria-label="Reset Car" title="Reset Car">🔄</button>
+      <button id="btnMenu" class="mini-btn" aria-label="Menu" title="Menu">☰</button>
+    </div>
+    <div class="pedals-row">
+      <button id="btnBrake" class="pedal brake" aria-label="Brake and Reverse">
+        <span>▼</span>
+        <span class="lbl">BRAKE</span>
+      </button>
+      <button id="btnGas" class="pedal gas" aria-label="Drive Forward">
+        <span>▲</span>
+        <span class="lbl">GAS</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="three.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
